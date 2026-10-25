@@ -1,0 +1,11 @@
+{
+  "id": "./", "name": "Hushwords", "short_name": "Hushwords",
+  "description": "A team word game for friends. Whisper one clue, find your agents, avoid the assassin.",
+  "lang": "en", "start_url": "./", "scope": "./", "display": "standalone", "orientation": "any",
+  "background_color": "#0a0d18", "theme_color": "#0a0d18", "categories": ["games", "entertainment"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
