@@ -182,7 +182,7 @@ textarea { resize: vertical; line-height: 1.4; } input::placeholder, textarea::p
 .card.pending::after { content: attr(data-by); position: absolute; left: 50%; bottom: -.7rem; transform: translateX(-50%); padding: .12rem .5rem; border-radius: 99px; background: var(--gold); color: #2a1c05; font: 700 .6rem var(--mono); letter-spacing: .04em; white-space: nowrap; max-width: 130%; overflow: hidden; text-overflow: ellipsis; z-index: 3; }
 @keyframes pending { 50% { transform: rotate(0) translateY(-8px) scale(1.09); } }
 
-.actions, .act { display: grid; gap: .6rem; } .act.op { grid-template-columns: 1fr auto; } .act.op .btn.big { min-width: 0; }
+.actions, .act { display: grid; gap: .6rem; } .act.op .btn.big { min-width: 0; } .subrow { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: .6rem; }
 .hint { text-align: center; color: var(--muted); padding: .4rem .5rem; } .hint b { color: var(--fg); }
 .clueform { display: grid; grid-template-columns: 1fr auto auto; gap: .5rem; align-items: stretch; } .clueform input { font-weight: 700; font-size: 1.1rem; }
 .clueform .btn { min-height: 3rem; }

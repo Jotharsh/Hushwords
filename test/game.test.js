@@ -184,13 +184,18 @@ test('finding every card of your colour wins, even if the other team revealed th
   assert.equal(r2.game.winner, f2);
 });
 
-test('the pointer is shared and toggles; ending the turn passes play on', () => {
+test('the pointer is shared and never toggles; deselect clears it; ending the turn passes play on', () => {
   const { room } = started();
   const team = room.game.turn, op = opToken(room, team);
   assert.equal(act(room, op, { type: 'select', idx: 3 }).error, 'not-playing');            // needs a clue first
   giveClue(room, 'harbour', 2);
   act(room, op, { type: 'select', idx: 3 }); assert.deepEqual(room.game.pending, { idx: 3, by: room.players[op].nick });
-  act(room, op, { type: 'select', idx: 3 }); assert.equal(room.game.pending, null);
+  const rev = room.rev;
+  assert.equal(act(room, op, { type: 'select', idx: 3 }).ok, true);                        // a repeated tap (slow connection) keeps it
+  assert.deepEqual(room.game.pending, { idx: 3, by: room.players[op].nick }); assert.equal(room.rev, rev);
+  act(room, op, { type: 'select', idx: 4 }); assert.equal(room.game.pending.idx, 4);
+  assert.equal(act(room, spyToken(room, team), { type: 'deselect' }).error, 'not-your-turn');
+  act(room, op, { type: 'deselect' }); assert.equal(room.game.pending, null);
   act(room, op, { type: 'select', idx: 4 });
   assert.equal(act(room, spyToken(room, team), { type: 'end' }).error, 'not-your-turn');
   assert.equal(act(room, op, { type: 'end' }).ok, true);

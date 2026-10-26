@@ -188,8 +188,15 @@ export function act(room, token, msg, now = Date.now(), random = Math.random) {
       if (me.role !== 'op' || me.team !== g.turn) return { ok: false, error: 'not-your-turn' };
       const i = msg.idx;
       if (!Number.isInteger(i) || i < 0 || i >= BOARD || g.board.cards[i].revealed) return { ok: false, error: 'bad-card' };
-      g.pending = g.pending?.idx === i && g.pending.by === me.nick ? null : { idx: i, by: me.nick };
+      if (g.pending?.idx === i) { if (g.pending.by !== me.nick) { g.pending = { idx: i, by: me.nick }; return done(); } return { ok: true }; }   // always sets, never toggles: a repeated or laggy tap must not undo the pointer
+      g.pending = { idx: i, by: me.nick };
       return done();
+    }
+    case 'deselect': {
+      if (room.phase !== 'play' || g.over) return { ok: false, error: 'not-playing' };
+      if (me.role !== 'op' || me.team !== g.turn) return { ok: false, error: 'not-your-turn' };
+      if (!g.pending) return { ok: true };
+      g.pending = null; return done();
     }
     case 'guess': {
       if (room.phase !== 'play' || g.over || !g.clue) return { ok: false, error: 'not-playing' };

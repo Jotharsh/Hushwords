@@ -195,10 +195,18 @@ export async function roomScreen(screen, [rawCode], { go }) {
         el.disabled = c.revealed;
       });
     }
+    // The first tap points; a second, deliberate tap on the same card reveals it. We remember our own pointer locally the
+    // instant we tap, so a slow connection can never make the second tap look like a fresh first tap.
+    let myPointer = null, pointerAt = 0;
     function tapCard(i) {
       const g = view.game;
       if (!g || g.over || !myTurn() || me().role !== 'op' || !g.clue || g.cards[i].revealed) return;
-      if (g.pending?.idx === i) session.request({ type: 'guess', idx: i }); else { sfx.select(); session.request({ type: 'select', idx: i }); }
+      const pointed = g.pending?.idx === i || (myPointer === i && Date.now() - pointerAt < 20000);
+      if (pointed) {
+        if (Date.now() - pointerAt < 450) return;                 // a double-tap is not a confirmation
+        myPointer = null; session.request({ type: 'guess', idx: i }); return;
+      }
+      myPointer = i; pointerAt = Date.now(); sfx.select(); session.request({ type: 'select', idx: i });
     }
 
     const timerEl = h('span', { class: 'timer' });
@@ -214,6 +222,7 @@ export async function roomScreen(screen, [rawCode], { go }) {
       if (boardSig && boardSig !== g.cards.map((c) => c.word).join('|')) { lastLog = ''; shownOver = false; }   // a new deal
       const board = boardSig === g.cards.map((c) => c.word).join('|') ? gameEl.querySelector('.board') : null;
       const grid = board ?? buildBoard(g);
+      if (!g.pending || g.over || !myTurn()) myPointer = null;
       paintCards(g);
 
       const ticketKey = g.clue ? `${g.turn}:${g.clue.word}:${g.clue.num}` : `none:${g.turn}:${g.over}`;
@@ -235,8 +244,10 @@ export async function roomScreen(screen, [rawCode], { go }) {
       else if (role === 'op' && myTurn() && g.clue) {
         const idx = g.pending?.idx;
         actions = h('div', { class: 'act op' },
-          h('button', { class: 'btn primary big', disabled: idx == null, onclick: () => session.request({ type: 'guess', idx }) }, idx != null ? `Reveal ${g.cards[idx].word.toUpperCase()}` : 'Tap a card to point at it'),
-          h('button', { class: 'btn', onclick: () => session.request({ type: 'end' }) }, icon('flag', 18), 'End turn'));
+          h('button', { class: 'btn primary big', disabled: idx == null, onclick: () => { myPointer = null; session.request({ type: 'guess', idx }); } }, idx != null ? `Reveal ${g.cards[idx].word.toUpperCase()}` : 'Tap a card to point at it'),
+          h('div', { class: 'subrow' },
+            idx != null ? h('button', { class: 'btn', 'aria-label': 'Cancel the pointer', onclick: () => { myPointer = null; session.request({ type: 'deselect' }); } }, icon('x', 18), 'Cancel') : null,
+            h('button', { class: 'btn', onclick: () => session.request({ type: 'end' }) }, icon('flag', 18), 'End turn')));
       } else if (role === 'op' && myTurn()) actions = h('p', { class: 'hint' }, 'Waiting for your spymaster\'s clue…');
       else actions = h('p', { class: 'hint' }, `${TEAM_NAME[g.turn]} is playing. ${role === 'spy' ? 'Watch their guesses.' : 'Stay quiet and watch.'}`);
 
